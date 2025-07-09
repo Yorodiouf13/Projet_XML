@@ -1,0 +1,9 @@
+# ignorer les images des utilisteurs créés
+assets/img/*.*
+
+# ignorer les fichiers de discussion
+assets/files/
+
+# ignorer le fichier base de données xml
+data/plateforme.xml
+
