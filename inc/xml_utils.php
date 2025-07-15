@@ -35,23 +35,22 @@ function ajouterUtilisateur($nom, $email, $motdepasse, $avatar = null) {
     if (trouverUtilisateurParEmail($email)) {
         return false; // email déjà pris
     }
-
+    
     // Générer un nouvel ID unique
     $lastId = 0;
     foreach ($xml->utilisateurs->utilisateur as $u) {
         $lastId = max($lastId, intval($u['id']));
     }
     $newId = $lastId + 1;
-
+    
     $utilisateur = $xml->utilisateurs->addChild('utilisateur');
     $utilisateur->addAttribute('id', $newId);
     $utilisateur->addChild('nom', htmlspecialchars($nom));
     $utilisateur->addChild('email', htmlspecialchars($email));
-    // Tu peux remplacer par password_hash() si tu veux un vrai hash (à voir avec le prof)
     $utilisateur->addChild('motdepasse', password_hash($motdepasse, PASSWORD_DEFAULT));
     $utilisateur->addChild('avatar', $avatar ?? '');
     $utilisateur->addChild('statut', 'Hors ligne');
-
+    
     sauvegarderXML($xml);
     return true;
 }
@@ -60,12 +59,10 @@ function ajouterUtilisateur($nom, $email, $motdepasse, $avatar = null) {
 function verifierMotDePasse($email, $motdepasse) {
     $utilisateur = trouverUtilisateurParEmail($email);
     if ($utilisateur) {
-        // Vérification du hash
         return password_verify($motdepasse, (string)$utilisateur->motdepasse) ? $utilisateur : false;
     }
     return false;
 }
-
 
 // Retourne tous les utilisateurs sauf l'utilisateur connecté
 function getAutresUtilisateurs($monId) {
@@ -89,12 +86,13 @@ function trouverUtilisateurParId($id) {
     return false;
 }
 
-// Récupérer tous les messages privés entre deux utilisateurs (dans les deux sens)
+// Récupérer tous les messages privés entre deux utilisateurs
 function getMessagesPrives($id1, $id2) {
     $xml = chargerXML();
     if (!isset($xml->messages)) {
         return [];
     }
+    
     $messages = [];
     foreach ($xml->messages->message as $msg) {
         $auteur = (string)$msg['auteur'];
@@ -106,10 +104,12 @@ function getMessagesPrives($id1, $id2) {
             $messages[] = $msg;
         }
     }
-    // Tri par date croissante (optionnel, selon format ISO 8601)
+    
+    // Tri par date croissante
     usort($messages, function($a, $b) {
         return strcmp($a['date'], $b['date']);
     });
+    
     return $messages;
 }
 
@@ -119,63 +119,63 @@ function envoyerMessagePrive($auteur, $destinataire, $contenu, $cheminFichier = 
     if (!isset($xml->messages)) {
         $xml->addChild('messages');
     }
+    
     $lastId = 0;
     foreach ($xml->messages->message as $m) {
         $lastId = max($lastId, intval($m['id']));
     }
     $newId = $lastId + 1;
+    
     $msg = $xml->messages->addChild('message', htmlspecialchars($contenu));
     $msg->addAttribute('id', $newId);
     $msg->addAttribute('auteur', $auteur);
     $msg->addAttribute('destinataire', $destinataire);
     $msg->addAttribute('date', date('c'));
-
-    // Si fichier joint, ajout sous-élément <fichier>
+    
+    // Si fichier joint
     if ($cheminFichier && $nomFichier) {
         $fichier = $msg->addChild('fichier');
         $fichier->addAttribute('chemin', $cheminFichier);
         $fichier->addAttribute('nom', $nomFichier);
     }
-
+    
     sauvegarderXML($xml);
     return true;
 }
 
-
-// Charger tous les groupes
+// Fonctions pour les groupes
 function chargerGroupes() {
     $xml = chargerXML();
     return isset($xml->groupes) ? $xml->groupes->groupe : [];
 }
 
-// Créer un nouveau groupe
 function creerGroupe($nom, $idsMembres) {
     $xml = chargerXML();
-    // Créer la section <groupes> si absente
     if (!isset($xml->groupes)) {
         $xml->addChild('groupes');
     }
-    // Générer un nouvel ID unique
+    
     $lastId = 0;
     foreach ($xml->groupes->groupe as $groupe) {
         $lastId = max($lastId, intval($groupe['id']));
     }
     $newId = $lastId + 1;
-
+    
     $groupe = $xml->groupes->addChild('groupe');
     $groupe->addAttribute('id', $newId);
     $groupe->addChild('nom', htmlspecialchars($nom));
+    
     $membres = $groupe->addChild('membres');
     foreach ($idsMembres as $id) {
         $membres->addChild('membre')->addAttribute('id', $id);
     }
-    // Section messages vide pour l’instant
+    
     $groupe->addChild('messages');
+    
     sauvegarderXML($xml);
     return $newId;
 }
 
-// Lister les groupes où je suis membre
 function getGroupesUtilisateur($idUtilisateur) {
     $groupes = chargerGroupes();
     $result = [];
@@ -190,7 +190,6 @@ function getGroupesUtilisateur($idUtilisateur) {
     return $result;
 }
 
-// Récupérer un groupe par son id
 function trouverGroupeParId($id) {
     $groupes = chargerGroupes();
     foreach ($groupes as $groupe) {
@@ -201,8 +200,6 @@ function trouverGroupeParId($id) {
     return false;
 }
 
-
-// Récupérer les messages d'un groupe
 function getMessagesGroupe($idGroupe) {
     $groupe = trouverGroupeParId($idGroupe);
     if ($groupe && isset($groupe->messages)) {
@@ -210,7 +207,6 @@ function getMessagesGroupe($idGroupe) {
         foreach ($groupe->messages->message as $msg) {
             $messages[] = $msg;
         }
-        // Tri par date croissante (optionnel)
         usort($messages, function($a, $b) {
             return strcmp($a['date'], $b['date']);
         });
@@ -219,7 +215,6 @@ function getMessagesGroupe($idGroupe) {
     return [];
 }
 
-// Envoyer un message dans un groupe
 function envoyerMessageGroupe($idGroupe, $auteur, $contenu, $cheminFichier = null, $nomFichier = null) {
     $xml = chargerXML();
     $groupe = null;
@@ -229,24 +224,26 @@ function envoyerMessageGroupe($idGroupe, $auteur, $contenu, $cheminFichier = nul
             break;
         }
     }
+    
     if (!$groupe) return false;
-
+    
     $lastId = 0;
     foreach ($groupe->messages->message as $m) {
         $lastId = max($lastId, intval($m['id']));
     }
     $newId = $lastId + 1;
-
+    
     $msg = $groupe->messages->addChild('message', htmlspecialchars($contenu));
     $msg->addAttribute('id', $newId);
     $msg->addAttribute('auteur', $auteur);
     $msg->addAttribute('date', date('c'));
+    
     if ($cheminFichier && $nomFichier) {
         $fichier = $msg->addChild('fichier');
         $fichier->addAttribute('chemin', $cheminFichier);
         $fichier->addAttribute('nom', $nomFichier);
     }
-
+    
     sauvegarderXML($xml);
     return true;
 }
@@ -263,7 +260,6 @@ function modifierAvatar($idUtilisateur, $cheminAvatar) {
     return false;
 }
 
-// Fonction pour mettre à jour le statut d'un utilisateur
 function modifierStatut($idUtilisateur, $statut) {
     $xml = chargerXML();
     foreach ($xml->utilisateurs->utilisateur as $u) {
@@ -275,6 +271,4 @@ function modifierStatut($idUtilisateur, $statut) {
     }
     return false;
 }
-
-
 ?>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!-- Élément racine -->
+  <xs:element name="plateforme">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="utilisateurs" type="utilisateursType"/>
+        <xs:element name="messages" type="messagesType" minOccurs="0"/>
+        <xs:element name="groupes" type="groupesType" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Type pour les utilisateurs -->
+  <xs:complexType name="utilisateursType">
+    <xs:sequence>
+      <xs:element name="utilisateur" type="utilisateurType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="utilisateurType">
+    <xs:sequence>
+      <xs:element name="nom" type="xs:string"/>
+      <xs:element name="email" type="xs:string"/>
+      <xs:element name="motdepasse" type="xs:string"/>
+      <xs:element name="avatar" type="xs:string"/>
+      <xs:element name="statut" type="statutType"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:simpleType name="statutType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="En ligne"/>
+      <xs:enumeration value="Hors ligne"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Type pour les messages -->
+  <xs:complexType name="messagesType">
+    <xs:sequence>
+      <xs:element name="message" type="messageType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="messageType" mixed="true">
+    <xs:sequence>
+      <xs:element name="fichier" type="fichierType" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+    <xs:attribute name="auteur" type="xs:string" use="required"/>
+    <xs:attribute name="destinataire" type="xs:string" use="required"/>
+    <xs:attribute name="date" type="xs:dateTime" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="fichierType">
+    <xs:attribute name="chemin" type="xs:string" use="required"/>
+    <xs:attribute name="nom" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <!-- Type pour les groupes -->
+  <xs:complexType name="groupesType">
+    <xs:sequence>
+      <xs:element name="groupe" type="groupeType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="groupeType">
+    <xs:sequence>
+      <xs:element name="nom" type="xs:string"/>
+      <xs:element name="membres" type="membresType"/>
+      <xs:element name="messages" type="messagesGroupeType"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="membresType">
+    <xs:sequence>
+      <xs:element name="membre" type="membreType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="membreType">
+    <xs:attribute name="id" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="messagesGroupeType">
+    <xs:sequence>
+      <xs:element name="message" type="messageGroupeType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="messageGroupeType" mixed="true">
+    <xs:sequence>
+      <xs:element name="fichier" type="fichierType" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+    <xs:attribute name="auteur" type="xs:string" use="required"/>
+    <xs:attribute name="date" type="xs:dateTime" use="required"/>
+  </xs:complexType>
+
+</xs:schema>

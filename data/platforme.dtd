@@ -1,0 +1,32 @@
+<!ELEMENT plateforme (utilisateurs, messages?, groupes?)>
+
+<!ELEMENT utilisateurs (utilisateur*)>
+<!ELEMENT utilisateur (nom, email, motdepasse, avatar, statut)>
+<!ATTLIST utilisateur id CDATA #REQUIRED>
+
+<!ELEMENT nom (#PCDATA)>
+<!ELEMENT email (#PCDATA)>
+<!ELEMENT motdepasse (#PCDATA)>
+<!ELEMENT avatar (#PCDATA)>
+<!ELEMENT statut (#PCDATA)>
+
+<!ELEMENT messages (message*)>
+<!ELEMENT message (#PCDATA | fichier)*>
+<!ATTLIST message 
+    id CDATA #REQUIRED
+    auteur CDATA #REQUIRED
+    destinataire CDATA #REQUIRED
+    date CDATA #REQUIRED>
+
+<!ELEMENT fichier EMPTY>
+<!ATTLIST fichier 
+    chemin CDATA #REQUIRED
+    nom CDATA #REQUIRED>
+
+<!ELEMENT groupes (groupe*)>
+<!ELEMENT groupe (nom, membres, messages)>
+<!ATTLIST groupe id CDATA #REQUIRED>
+
+<!ELEMENT membres (membre*)>
+<!ELEMENT membre EMPTY>
+<!ATTLIST membre id CDATA #REQUIRED>
